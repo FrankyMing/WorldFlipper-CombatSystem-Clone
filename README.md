@@ -5,6 +5,9 @@
 **實機展示影片**
 https://youtube.com/shorts/mBvYIv-wWDg?feature=share
 
+**重構前展示影片**
+https://www.youtube.com/watch?v=8ZvDmzgUSZA&t=3s
+
 ## 專案概述
 這是一個基於 Unity 開發的動作 RPG 戰鬥系統逆向工程專案。
 為解決高頻率物理碰撞與多重動畫演出交錯時容易產生的 Bug，本專案捨棄了將邏輯全塞在 `Update` 的高耦合寫法。重點在於導入**狀態機 (State Machine)** 與 **事件驅動 (Event-Driven)** 架構，確保系統具備高擴充性與防呆機制。
