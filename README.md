@@ -1,1 +1,27 @@
-# WorldFlipper-CombatSystem-Clone
+# World Flipper (彈射世界) - 逆向工程還原核心戰鬥系統
+
+> 註：為保護專案完整性與素材版權，本 Repository 僅展示核心戰鬥、物理微調與系統架構之原始碼。完整的實機運作請見下方展示影片。
+
+**實機展示影片**
+https://youtube.com/shorts/mBvYIv-wWDg?feature=share
+
+## 專案概述
+這是一個基於 Unity 開發的動作 RPG 戰鬥系統逆向工程專案。
+為解決高頻率物理碰撞與多重動畫演出交錯時容易產生的 Bug，本專案捨棄了將邏輯全塞在 `Update` 的高耦合寫法。重點在於導入**狀態機 (State Machine)** 與 **事件驅動 (Event-Driven)** 架構，確保系統具備高擴充性與防呆機制。
+
+## 核心技術實作與解決的痛點
+
+### 1. 物理手感微調與極限控速 (`Marble.cs`)
+* **問題：** Unity 原生物理引擎在處理高速彈射時，極易產生「能量無中生有 (無限加速)」或「貼牆減速」的失控現象。
+* **解法：** 覆寫預設物理材質，並在 `FixedUpdate` 實作 `maxSpeed` 終極限速器。將實體狀態封裝進 Property 中，狀態切換時自動觸發關聯行為，避免邏輯遺漏，重現扎實的街機打擊手感。
+
+### 2. 解決「0 幀誤差」的傷害廣播網 (`DamageOutput.cs`)
+* **問題：** 當彈珠以極高速度穿過多個重疊的 Collider 時，常會引發一幀內重複扣血的嚴重 Bug。
+* **解法：** 導入 `IDamageable` 介面解耦，並利用 `Dictionary` 實作 0.1 秒極短無敵幀過濾器。透過封裝 `DamageData` 傳遞參數，讓 UI 與特效系統能被動接收事件，達成低耦合的傷害廣播。
+
+### 3. 多重 Timeline 併發防禦 (`SkillEnergySystem.cs`)
+* **問題：** 玩家在戰鬥中若連續狂點不同角色的大招，會導致多條 Timeline 互相搶奪 `Time.timeScale` 與攝影機控制權，造成系統卡死或狀態錯亂。
+* **解法：** 實作全域狀態鎖 (`GlobalSkillLock`) 與嚴格的發動前置檢查。結合生命週期管理 (`OnEnable`/`OnDisable`) 安全地訂閱與註銷 Timeline 結束事件，確保異步演出的絕對穩定。
+
+### 4. 全域狀態機管控 (`GameManager.cs`)
+* **實作：** 利用 C# `Action` 建立單向的遊戲狀態廣播中心。各個獨立系統（如物理球、技能冷卻）只需監聽狀態改變即可自行應對（例如 `GameState.Stop` 時自動暫停運算），徹底避免 Singleton 的濫用所造成的義大利麵條程式碼。
